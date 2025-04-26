@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Search User by Mobile</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+      /* Reset basic styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #c3ecf9, #f0c3f1);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 50px 20px;
+      }
+
+      /* Logo styling */
+      img {
+        max-width: 150px;
+        margin-bottom: 30px;
+        animation: fadeIn 1s ease;
+      }
+
+      h1 {
+        font-size: 36px;
+        color: #2d3436;
+        margin-bottom: 40px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-align: center;
+      }
+
+      /* Main container */
+      .search-container {
+        background: #fff;
+        padding: 40px 30px 30px;
+        border-radius: 20px;
+        box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        width: 100%;
+        max-width: 500px;
+        animation: fadeIn 1s ease;
+      }
+
+      input {
+        padding: 14px 18px;
+        width: 75%;
+        font-size: 16px;
+        border: 2px solid #9b9b9c;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        transition: 0.3s ease;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #6c5ce7;
+        box-shadow: 0 0 8px rgba(108, 92, 231, 0.4);
+      }
+
+      button {
+        padding: 14px 25px;
+        font-size: 16px;
+        background: #6c5ce7;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        margin-left: 10px;
+        transition: background 0.3s ease, transform 0.2s ease;
+      }
+
+      button:hover {
+        background: #5e53d6;
+        transform: translateY(-2px);
+      }
+
+      .result {
+        margin-top: 35px;
+        width: 100%;
+        max-width: 500px;
+      }
+
+      /* Card result display */
+      .card {
+        background: #fff;
+        padding: 35px 30px;
+        border-radius: 20px;
+        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+        animation: fadeIn 0.8s ease;
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        font-size: 16px;
+        color: #2f3542;
+      }
+
+      .label {
+        font-weight: 600;
+        color: #636e72;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        width: 35%;
+        text-align: left;
+      }
+
+      .value {
+        font-size: 16px;
+        color: #2f3542;
+        word-break: break-word;
+        line-height: 1.4;
+        font-weight: 500;
+        width: 60%;
+        text-align: left;
+      }
+
+      .not-found {
+        color: #d63031;
+        font-weight: 600;
+        font-size: 18px;
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      a {
+        color: #6c5ce7;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Responsive Design */
+      @media (max-width: 600px) {
+        body {
+          padding: 30px 10px;
+        }
+
+        h1 {
+          font-size: 28px;
+          margin-bottom: 30px;
+        }
+
+        .search-container {
+          padding: 30px 20px;
+        }
+
+        input {
+          width: 90%;
+        }
+
+        button {
+          width: 90%;
+          margin-left: 0;
+          margin-top: 15px;
+        }
+
+        .result {
+          max-width: 100%;
+        }
+
+        .card {
+          padding: 25px 20px;
+        }
+
+        .row {
+          flex-direction: column;
+          margin-bottom: 12px;
+        }
+
+        .label,
+        .value {
+          width: 100%;
+          text-align: left;
+        }
+
+        .label {
+          margin-bottom: 5px;
+        }
+
+        .not-found {
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Logo -->
+    <img src="logo.jpg" alt="Logo" />
+
+    <!-- Main Heading -->
+    <h1>Enter Registered Mobile Number For Bus Details</h1>
+
+    <!-- Search Input and Button -->
+    <div class="search-container">
+      <input type="text" id="mobileInput" placeholder="Enter Mobile Number" />
+      <button onclick="searchMobile()">Search</button>
+
+      <div id="result" class="result"></div>
+    </div>
+
+    <script>
+      let data = [];
+
+      async function loadExcel() {
+        try {
+          const response = await fetch("data.xlsx");
+          const arrayBuffer = await response.arrayBuffer();
+          const workbook = XLSX.read(arrayBuffer, { type: "array" });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          data = XLSX.utils.sheet_to_json(sheet);
+          console.log("Excel data loaded:", data);
+        } catch (error) {
+          console.error("Error loading Excel file:", error);
+        }
+      }
+
+      function searchMobile() {
+        const mobile = document.getElementById("mobileInput").value.trim();
+        const user = data.find(
+          (item) =>
+            item.mobileNumber == mobile ||
+            item.MobileNumber == mobile ||
+            item["Mobile Number"] == mobile
+        );
+
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = "";
+
+        if (user) {
+          let card = `<div class="card">`;
+          for (const key in user) {
+            let value = user[key];
+
+            // Convert Pickup Time to HH:mm format (If it exists)
+            if (key.toLowerCase().includes("pickup time") && value) {
+              const date = new Date(value);
+              const hours = String(date.getHours()).padStart(2, "0");
+              const minutes = String(date.getMinutes()).padStart(2, "0");
+              value = `${hours}:${minutes} AM`; // Only show HH:mm
+            }
+
+            // Convert URLs to clickable links
+            if (typeof value === "string" && value.includes("http")) {
+              value = `<a href="${value}" target="_blank">${value}</a>`;
+            }
+
+            card += `
+        <div class="row">
+          <div class="label">${key}</div>
+          <div class="value">${value}</div>
+        </div>
+      `;
+          }
+          card += `</div>`;
+          resultDiv.innerHTML = card;
+        } else {
+          resultDiv.innerHTML = `<p class="not-found">No user found with mobile number ${mobile}.</p>`;
+        }
+      }
+
+      // Load excel on page load
+      loadExcel();
+    </script>
+  </body>
+</html>
